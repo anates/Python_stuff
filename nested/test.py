@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 '''
 Created on 16.09.2014
 
@@ -40,47 +41,48 @@ print "Existiert die Datenbank?"
 print checkIfDatabaseExists("testdb", "test", "localhost", "abcd")
 print "Existiert die Tabelle?"
 print checkIfTableExists("testdb", "test", "localhost", "abcd", "cars")
-#===============================================================================
-# cars = (
-#     (1, 'Audi', 52642),
-#     (2, 'Mercedes', 57127),
-#     (3, 'Skoda', 9000),
-#     (4, 'Volvo', 29000),
-#     (5, 'Bentley', 350000),
-#     (6, 'Citroen', 21000),
-#     (7, 'Hummer', 41400),
-#     (8, 'Volkswagen', 21600)
-# )
-#   
-# con = None
-#   
-# try:
-#        
-#     con = psycopg2.connect(database='testdb', user='test', password="abcd")  
-#      
-#     cur = con.cursor()    
-#     cur.execute("SELECT * FROM cars")
-#  
-#     rows = cur.fetchall()
-#  
-#     for row in rows:
-#         print row
-#       
-#   
-# except psycopg2.DatabaseError, e:
-#       
-#     if con:
-#         con.rollback()
-#       
-#     print 'Error %s' % e    
-#     sys.exit(1)
-#       
-#       
-# finally:
-#       
-#     if con:
-#         con.close()
-#===============================================================================
+
+delTable("testdb", "test", "localhost", "abcd", "cars")
+
+cars = (
+    ('Audi', 1, 52642),
+    ('Mercedes', 2, 57127),
+    ('Skoda', 3, 9000),
+    ('Volvo', 4, 29000),
+    ('Bentley', 5, 350000),
+    ('Citroen', 6, 21000),
+    ('Hummer', 7, 41400),
+    ('Volkswagen', 8, 21600)
+)
+    
+con = None
+    
+try:
+         
+    con = psycopg2.connect(database='testdb', user='test', password="abcd")  
+       
+    cur = con.cursor()    
+    cur.execute("DROP TABLE IF EXISTS cars")
+    cur.execute("CREATE TABLE cars(id INT PRIMARY KEY, name TEXT, price INT)")
+    query = "INSERT INTO cars (name, id, price) VALUES (%s, %s, %s)"
+    cur.executemany(query, cars)
         
+    con.commit()
+        
+    
+except psycopg2.DatabaseError, e:
+        
+    if con:
+        con.rollback()
+        
+    print 'Error %s' % e    
+    sys.exit(1)
+        
+        
+finally:
+        
+    if con:
+        con.close()
+         
 
 
