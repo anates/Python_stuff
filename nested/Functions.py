@@ -7,8 +7,7 @@ Created on 19.09.2014
 
 import hl7
 import psycopg2
-from numpy.distutils.mingw32ccompiler import _TABLE
-from httplib2 import _entry_disposition
+import json
 
 def getNames(parsed_message):
     '''Zieht sich die Namen des Patienten aus der HL7-Nachricht (funktioniert)'''
@@ -84,7 +83,7 @@ def delTable(_database, _user, _host, _password, _table):
     query = "DROP TABLE IF EXISTS %s" % _table
     cur.execute(query)
 
-def createNewTable(_database, _user, _host, _password, _tablename):
+def createNewTable(_database, _user, _host, _password, _tablename, _patientdata):
     '''Legt einen neuen Patienten an'''
     con = None    
     con = psycopg2.connect(database=_database, user=_user, password=_password)  
@@ -92,6 +91,31 @@ def createNewTable(_database, _user, _host, _password, _tablename):
     if(checkIfTableExists(_database, _user, _host, _password, _tablename)):
         return False
     else:
-        #query = "CREATE TABLE %s(name TEXT PRIMARY KEY, surname TEXT, price INT)"
-        #Hier kann ich leider noch nichts einfügen, da ich mich noch nicht so gut in HL7 auskenne...
+        Patient = ((_patientdata['name'], _patientdata['surname'], _patientdata['birthdate'], _patientdata['PID']))
+        print Patient
+        query = "CREATE TABLE %s (name TEXT PRIMARY KEY, surname TEXT, birthdate TEXT, PID INT)" % _tablename
+        cur.execute(query)
+        query = "INSERT INTO %s (name, surname, birthdate, PID) VALUES (%s, %s, %s, %s)" % (_tablename, Patient[0],Patient[1],Patient[2],Patient[3])#_patientdata['name'], _patientdata['surname'], _patientdata['birthdate'], _patientdata['PID'],) 
+        cur.execute(query)
+        cur.commit()
         return True
+    
+def createLUTTable(PID, position):
+    '''Gibt die Funktion des Segments an Position 'position' des Elements 'PID' zurück'''
+    
+                
+def createJSONObject(_parsed_message):
+    '''Wandelt die HL7-Nachricht in ein JSON-Object um'''
+    return json.dumps(_parsed_message)                    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    

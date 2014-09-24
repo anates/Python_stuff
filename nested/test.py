@@ -8,17 +8,40 @@ import hl7
 import sys
 import psycopg2
 from Functions import *
+from __builtin__ import str
+import json
 
-message = ''
-# message2 = 'MSH|^~\&|GHH LAB|ELAB-3|GHH OE|BLDG4|200202150930||ORU^R01|CNTRL-3456|P|2.4\r'
-# message2 += 'PID|||555-44-4444||EVERYWOMAN^EVE^E^^^^L|JONES|196203520|F|||153 FERNWOOD DR.^^STATESVILLE^OH^35292||(206)3345232|(206)752-121||||AC555444444||67-A4335^OH^20030520\r'
-# message2 += 'OBR|1|845439^GHH OE|1045813^GHH LAB|1554-5^GLUCOSE|||200202150730||||||||555-55-5555^PRIMARY^PATRICIA P^^^^MD^^LEVEL SEVEN HEALTHCARE, INC.|||||||||F||||||444-44-4444^HIPPOCRATES^HOWARD H^^^^MD\r'
-# message2 += 'OBX|1|SN|1554-5^GLUCOSE^POST 12H CFST:MCNC:PT:SER/PLAS:QN||^182|mg/dl|70_105|H|||F'
-for line in sys.stdin:
-    message += line[:-1]
 
-#print message
-h = hl7.parse(message)
+
+_filename_in = ""
+_filename_out = ""
+
+_message = ''
+_message_array = []
+
+_patient_data = {}
+
+if(len(sys.argv) != 3):
+    _use_stdin = True
+else:
+    _use_stdin = False
+    _filename_in = sys.argv[1]
+    _filename_out = sys.argv[2]
+    
+
+    
+
+
+if not _use_stdin:
+    lines = [line.rstrip('\n') for line in open(_filename_in)]
+    for string in lines:
+        _message += string
+else:
+    for line in sys.stdin:
+        _message += line[:-1]
+
+#parse message
+_h = hl7.parse(_message)
 
 #print isinstance(h, hl7.Message)
 #print type(h)
@@ -28,21 +51,38 @@ h = hl7.parse(message)
 #--------------------------------------------- print len(h.segment("PID")[5][0])
 #------------------------------------------ print len(h.segment("PID")[5][0][0])
 #--------------------------------------- print len(h.segment("PID")[5][0][0][0])
-print getNames(h)
-PatientBookfull = {getNames(h):h}
-PatientBookfull[getNames(h)] = h
-PatientBookSimple = {getNames(h):getObservablen(h)}
-Untersuchungen = getObservablen(h)
-print PatientBookfull.keys()
-print Untersuchungen
-print PatientBookSimple
+print getNames(_h)
+PatientBookfull = {getNames(_h):_h}
+PatientBookfull[getNames(_h)] = _h
+PatientBookSimple = {getNames(_h):getObservablen(_h)}
+Untersuchungen = getObservablen(_h)
 
-print "Existiert die Datenbank?"
-print checkIfDatabaseExists("testdb", "test", "localhost", "abcd")
-print "Existiert die Tabelle?"
-print checkIfTableExists("testdb", "test", "localhost", "abcd", "cars")
+print _h[0]
 
-delTable("testdb", "test", "localhost", "abcd", "cars")
+for i, elem in enumerate(Untersuchungen):
+    _patient_data[elem] = _h[i]
+
+_JSON = createJSONObject(_h)
+if(_use_stdin):
+    print _JSON
+else:
+    with open(_filename_out, "w") as text_file:
+        text_file.write(_JSON)
+#===============================================================================
+# print PatientBookfull.keys()
+# print Untersuchungen
+# print PatientBookSimple
+# 
+# print "Existiert die Datenbank?"
+# print checkIfDatabaseExists("testdb", "test", "localhost", "abcd")
+# print "Existiert die Tabelle?"
+# print checkIfTableExists("testdb", "test", "localhost", "abcd", "cars")
+# delTable("testdb", "test", "localhost", "abcd", "cars")
+#===============================================================================
+
+Patient = {'name':'Mustermann', 'surname':'Max', 'birthdate': '01011990', 'PID': 99999999}
+
+#createNewTable("testdb", "test", "localhost", "abcd", "ErsterPatient", Patient)
 
 cars = (
     ('Audi', 1, 52642),
